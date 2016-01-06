@@ -7,19 +7,37 @@ var win = window,
   doc = document;
 
 
-Scrollspy = React.createClass({
+Scrollspy = React.createClass({displayName: 'Scrollspy',
 
   propTypes: {
-    items: React.PropTypes.arrayOf(React.PropTypes.string).isRequired,
-    currentClassName: React.PropTypes.string.isRequired
+    currentClassName: React.PropTypes.string.isRequired,
+    items: React.PropTypes.arrayOf(React.PropTypes.string).isRequired
   },
 
   getInitialState: function () {
-
+    var targets = this._initSpyTarget(this.props.items);
     return {
-      targetItems: [],
-      inViewState: []
+      targetItems: targets,
+      inViewState: this._getElemsViewState(targets).viewStatusList
     };
+  },
+
+  componentDidMount: function () {
+    win.addEventListener('scroll', this._handleSpy);
+  },
+
+  componentWillReceiveProps: function (nextProps){
+    var targetItems = this._initSpyTarget(nextProps.items);
+
+    this.setState({
+      targetItems: targetItems
+    });
+
+    this._spy(targetItems);
+  },
+
+  componentWillUnmount: function () {
+    win.removeEventListener('scroll', this._handleSpy);
   },
 
   _initSpyTarget: function (items) {
@@ -87,27 +105,13 @@ Scrollspy = React.createClass({
     timer = setTimeout(this._spy, 100);
   },
 
-  componentDidMount: function () {
-    var targetItems = this._initSpyTarget(this.props.items);
-
-    this.setState({
-      targetItems: targetItems
-    });
-
-    this._spy(targetItems);
-
-    win.addEventListener('scroll', this._handleSpy);
-  },
-
-  componentWillUnmount: function () {
-    win.removeEventListener('scroll', this._handleSpy);
-  },
-
   render: function () {
+
     var items = this.props.children.map(function (child, idx) {
 
       return React.cloneElement(child, {
-        className: (child.props.className ? child.props.className : '') + (this.state.inViewState[idx] ? ' ' + this.props.currentClassName : '')
+        className: (child.props.className ? child.props.className : '') + (this.state.inViewState[idx] ? ' ' + this.props.currentClassName : ''),
+        key: idx
       });
 
     }.bind(this));
